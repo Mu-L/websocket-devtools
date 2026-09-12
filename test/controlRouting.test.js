@@ -3,8 +3,9 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
 
-async function createHarness(currentWindowTabs) {
+async function createHarness(tabs, currentWindowId = 2) {
   const deliveries = [];
+  let messageListener;
   const event = () => ({ addListener() {} });
   const context = vm.createContext({
     URL,
@@ -15,7 +16,7 @@ async function createHarness(currentWindowTabs) {
       runtime: {
         onConnect: event(),
         onInstalled: event(),
-        onMessage: event(),
+        onMessage: { addListener(listener) { messageListener = listener; } },
         onStartup: event(),
         onSuspend: event(),
         onUpdateAvailable: event(),
@@ -29,9 +30,12 @@ async function createHarness(currentWindowTabs) {
       tabs: {
         onRemoved: event(),
         onUpdated: event(),
-        query(_query, callback) {
-          if (callback) callback(currentWindowTabs);
-          return Promise.resolve(currentWindowTabs);
+        query(query, callback) {
+          const matchingTabs = query.currentWindow
+            ? tabs.filter(tab => tab.windowId === currentWindowId)
+            : tabs;
+          if (callback) callback(matchingTabs);
+          return Promise.resolve(matchingTabs);
         },
         sendMessage(tabId, message) {
           deliveries.push({ tabId, message });
@@ -44,21 +48,29 @@ async function createHarness(currentWindowTabs) {
     await readFile(new URL("../src/background/background.js", import.meta.url), "utf8"),
     context,
   );
-  return { notify: context.notifyAllTabs, deliveries };
+  return {
+    deliveries,
+    async send(message) {
+      messageListener(message, {}, () => {});
+      await new Promise(setImmediate);
+    },
+  };
 }
 
 test("delivers targeted controls to a tab outside the current window", async () => {
-  const harness = await createHarness([{ id: 8, windowId: 2 }]);
-  await harness.notify("simulate-message", {
+  const harness = await createHarness([{ id: 7, windowId: 1 }, { id: 8, windowId: 2 }]);
+  await harness.send({ type: "simulate-message", data: {
+    tabId: 7,
     connectionId: "connection-7",
     message: "client-ping",
     direction: "outgoing",
-  }, 7);
+  } });
 
   assert.deepEqual(JSON.parse(JSON.stringify(harness.deliveries)), [{
     tabId: 7,
     message: {
       type: "simulate-message",
+      tabId: 7,
       connectionId: "connection-7",
       message: "client-ping",
       direction: "outgoing",
@@ -67,11 +79,13 @@ test("delivers targeted controls to a tab outside the current window", async () 
 });
 
 test("keeps untargeted controls limited to tabs in the current window", async () => {
-  const harness = await createHarness([{ id: 8, windowId: 2 }, { id: 9, windowId: 2 }]);
-  await harness.notify("block-outgoing", { enabled: true });
+  const harness = await createHarness([
+    { id: 7, windowId: 1 }, { id: 8, windowId: 2 }, { id: 9, windowId: 2 },
+  ]);
+  await harness.send({ type: "simulate-message", data: { message: "broadcast-ping" } });
 
   assert.deepEqual(JSON.parse(JSON.stringify(harness.deliveries)), [
-    { tabId: 8, message: { type: "block-outgoing", enabled: true } },
-    { tabId: 9, message: { type: "block-outgoing", enabled: true } },
+    { tabId: 8, message: { type: "simulate-message", message: "broadcast-ping" } },
+    { tabId: 9, message: { type: "simulate-message", message: "broadcast-ping" } },
   ]);
 });
