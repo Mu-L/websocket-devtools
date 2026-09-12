@@ -312,17 +312,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Notify all tabs or specific tab's content scripts
 async function notifyAllTabs(type, data = {}, targetTabId = null) {
   try {
-    let tabs;
-
     if (targetTabId) {
-      // Notify specific tab
-      tabs = await chrome.tabs.query({ currentWindow: true });
-      tabs = tabs.filter((tab) => tab.id === targetTabId);
-    } else {
-      // Notify all tabs (not just active ones)
-      tabs = await chrome.tabs.query({ currentWindow: true });
+      // A known tab may belong to another window; do not filter it by focus.
+      await chrome.tabs.sendMessage(targetTabId, { type, ...data });
+      return;
     }
 
+    // Untargeted commands retain their current-window broadcast behavior.
+    const tabs = await chrome.tabs.query({ currentWindow: true });
     const promises = tabs.map((tab) => {
       if (tab.id) {
         return chrome.tabs
