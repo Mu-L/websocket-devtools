@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { filterMessages } from "../utils/filterUtils";
 import JsonViewer from "./JsonViewer";
@@ -6,6 +6,10 @@ import useNewMessageHighlight from "../hooks/useNewMessageHighlight";
 import { addFromMessageList } from "../utils/globalFavorites";
 import { Ban, Search, Settings, CircleX, ListTree } from "lucide-react";
 import { t } from "../utils/i18n.js";
+import {
+  buildMessageSections,
+  createMessageGroupingCache,
+} from "../utils/messageGrouping.js";
 import CheeseIcon from "../Icons/cheese.jsx";
 import ProtobufIcon from "../Icons/Protobuf.jsx";
 
@@ -82,6 +86,57 @@ const MessageDetails = ({
   const [groupDisplayField, setGroupDisplayField] = useState("");
   const [groupSortMode, setGroupSortMode] = useState("firstOutgoing");
   const [collapsedGroups, setCollapsedGroups] = useState({});
+  const groupingCacheRef = useRef(createMessageGroupingCache());
+  const sortedMessages = useMemo(() => {
+    const filteredMessages = filterMessages(connection?.messages || [], {
+      direction: filterDirection,
+      text: filterText,
+      invert: filterInvert,
+    });
+
+    return [...filteredMessages].sort((a, b) => {
+      return sortOrder === "desc"
+        ? b.timestamp - a.timestamp
+        : a.timestamp - b.timestamp;
+    });
+  }, [
+    connection?.messages,
+    filterDirection,
+    filterText,
+    filterInvert,
+    sortOrder,
+  ]);
+
+  const groupOtherTitle = t("messageDetails.grouping.other");
+  const missingGroupFieldTitle = t("messageDetails.grouping.noField", {
+    field: groupField.trim(),
+  });
+  // UI-only state changes such as hover or collapse reuse the same sections.
+  const messageSections = useMemo(
+    () =>
+      buildMessageSections({
+        sortedMessages,
+        groupEnabled,
+        groupField,
+        groupValue,
+        groupDisplayField,
+        groupSortMode,
+        otherTitle: groupOtherTitle,
+        missingFieldTitle: missingGroupFieldTitle,
+        cache: groupingCacheRef.current,
+      }),
+    [
+      sortedMessages,
+      groupEnabled,
+      groupField,
+      groupValue,
+      groupDisplayField,
+      groupSortMode,
+      groupOtherTitle,
+      missingGroupFieldTitle,
+    ]
+  );
+
 
   
   // Use new message highlight hook
@@ -99,22 +154,7 @@ const MessageDetails = ({
   // Keyboard navigation for message selection
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Only handle arrow keys when we have connection and messages
-      if (!connection || !connection.messages || connection.messages.length === 0) return;
-      
-      // Calculate filtered and sorted messages inside the effect
-      const filteredMessages = filterMessages(connection.messages, {
-        direction: filterDirection,
-        text: filterText,
-        invert: filterInvert,
-      });
-      
-      const sortedMessages = [...filteredMessages].sort((a, b) => {
-        return sortOrder === "desc"
-          ? b.timestamp - a.timestamp
-          : a.timestamp - b.timestamp;
-      });
-      
+      // Only handle arrow keys when there are visible messages
       if (sortedMessages.length === 0) return;
       
       const tableContainer = document.querySelector('.messages-table-container');
@@ -171,7 +211,7 @@ const MessageDetails = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [connection, filterDirection, filterText, filterInvert, sortOrder, selectedMessageKey]);
+  }, [sortedMessages, selectedMessageKey]);
 
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);
@@ -194,20 +234,6 @@ const MessageDetails = ({
       </div>
     );
   }
-
-  // First use the original filterMessages to filter direction/text
-  let filteredMessages = filterMessages(connection.messages, {
-    direction: filterDirection,
-    text: filterText,
-    invert: filterInvert,
-  });
-
-  // Sort messages
-  const sortedMessages = [...filteredMessages].sort((a, b) => {
-    return sortOrder === "desc"
-      ? b.timestamp - a.timestamp
-      : a.timestamp - b.timestamp;
-  });
 
   // formatMessage function has been moved to the JsonViewer component for internal handling
 
@@ -262,281 +288,6 @@ const MessageDetails = ({
   const getMessageLength = (message) => {
     if (message.type !== "message") return "-";
     return message.data ? message.data.length : 0;
-  };
-
-  const safeParseJson = (value) => {
-    if (typeof value !== "string") {
-      return value && typeof value === "object" ? value : null;
-    }
-
-    const trimmed = value.trim();
-    if (!trimmed || (!trimmed.startsWith("{") && !trimmed.startsWith("["))) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(trimmed);
-    } catch (error) {
-      return null;
-    }
-  };
-
-  const getValueByPath = (source, path) => {
-    if (!source || typeof source !== "object" || !path) return undefined;
-
-    return path.split(".").reduce((current, key) => {
-      if (current === undefined || current === null) return undefined;
-      return current[key];
-    }, source);
-  };
-
-  const findValuesByKey = (source, targetKey) => {
-    const values = [];
-    const normalizedTargetKey = targetKey.toLowerCase();
-
-    const visit = (node) => {
-      if (!node || typeof node !== "object") return;
-
-      if (Array.isArray(node)) {
-        node.forEach(visit);
-        return;
-      }
-
-      Object.entries(node).forEach(([key, value]) => {
-        if (key.toLowerCase() === normalizedTargetKey) {
-          values.push(value);
-        }
-        visit(value);
-      });
-    };
-
-    visit(source);
-    return values;
-  };
-
-  const normalizeGroupValue = (value) => {
-    if (value === undefined || value === null) return "";
-    if (typeof value === "object") {
-      try {
-        return JSON.stringify(value);
-      } catch (error) {
-        return String(value);
-      }
-    }
-    return String(value);
-  };
-
-  const escapeRegExp = (value) => {
-    return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  };
-
-  const extractGroupValues = (message, fieldName) => {
-    if (!fieldName || !message || message.type !== "message") return [];
-
-    const candidateData = [message.data, message.protobufDecoded].filter(
-      (candidate) => candidate !== undefined && candidate !== null
-    );
-
-    for (const candidate of candidateData) {
-      const parsed = safeParseJson(candidate);
-      if (!parsed) continue;
-
-      const directValue = getValueByPath(parsed, fieldName);
-      if (directValue !== undefined) {
-        return [normalizeGroupValue(directValue)];
-      }
-
-      if (!fieldName.includes(".")) {
-        const recursiveValues = findValuesByKey(parsed, fieldName);
-        if (recursiveValues.length > 0) {
-          return recursiveValues.map(normalizeGroupValue);
-        }
-      }
-    }
-
-    const textData = candidateData
-      .filter((candidate) => typeof candidate === "string")
-      .join("\n");
-
-    if (!textData) return [];
-
-    const fieldPattern = escapeRegExp(fieldName);
-    const quotedStringValuePattern = new RegExp(
-      `"${fieldPattern}"\\s*:\\s*"([^"]*)"`,
-      "i"
-    );
-    const primitiveValuePattern = new RegExp(
-      `"${fieldPattern}"\\s*:\\s*([^,}\\]\\s]+)`,
-      "i"
-    );
-    const match =
-      textData.match(quotedStringValuePattern) ||
-      textData.match(primitiveValuePattern);
-
-    return match ? [match[1]] : [];
-  };
-
-  const messageMatchesGroupValue = (message, fieldName, value) => {
-    const expectedValue = value.trim();
-    const values = extractGroupValues(message, fieldName);
-
-    if (!expectedValue) {
-      return values.length > 0;
-    }
-
-    return values.some((currentValue) => currentValue === expectedValue);
-  };
-
-  const getGroupDisplayValue = (messages, displayField) => {
-    const trimmedDisplayField = displayField.trim();
-    if (!trimmedDisplayField) return "";
-
-    const uniqueValues = [];
-    const seenValues = new Set();
-
-    messages.forEach((message) => {
-      extractGroupValues(message, trimmedDisplayField).forEach((value) => {
-        if (!value || seenValues.has(value)) return;
-        seenValues.add(value);
-        uniqueValues.push(value);
-      });
-    });
-
-    if (uniqueValues.length === 0) return "";
-
-    const visibleValues = uniqueValues.slice(0, 2).join(", ");
-    return uniqueValues.length > 2
-      ? `${trimmedDisplayField}: ${visibleValues} +${uniqueValues.length - 2}`
-      : `${trimmedDisplayField}: ${visibleValues}`;
-  };
-
-  const getFirstOutgoingTimestamp = (messages) => {
-    const outgoingTimestamps = messages
-      .filter((message) => message.direction === "outgoing")
-      .map((message) => message.timestamp);
-
-    if (outgoingTimestamps.length > 0) {
-      return Math.min(...outgoingTimestamps);
-    }
-
-    const messageTimestamps = messages.map((message) => message.timestamp);
-    return messageTimestamps.length > 0 ? Math.min(...messageTimestamps) : Number.MAX_SAFE_INTEGER;
-  };
-
-  const getFirstMessageTimestamp = (messages) => {
-    const messageTimestamps = messages.map((message) => message.timestamp);
-    return messageTimestamps.length > 0 ? Math.min(...messageTimestamps) : Number.MAX_SAFE_INTEGER;
-  };
-
-  const getLatestMessageTimestamp = (messages) => {
-    const messageTimestamps = messages.map((message) => message.timestamp);
-    return messageTimestamps.length > 0 ? Math.max(...messageTimestamps) : Number.MIN_SAFE_INTEGER;
-  };
-
-  const sortSections = (sections) => {
-    return [...sections].sort((a, b) => {
-      let diff = 0;
-
-      switch (groupSortMode) {
-        case "firstMessage":
-          diff = getFirstMessageTimestamp(a.messages) - getFirstMessageTimestamp(b.messages);
-          break;
-        case "latestMessage":
-          diff = getLatestMessageTimestamp(b.messages) - getLatestMessageTimestamp(a.messages);
-          break;
-        case "groupValue":
-          diff = a.title.localeCompare(b.title);
-          break;
-        case "messageCount":
-          diff = b.messages.length - a.messages.length;
-          break;
-        case "firstOutgoing":
-        default:
-          diff = getFirstOutgoingTimestamp(a.messages) - getFirstOutgoingTimestamp(b.messages);
-          break;
-      }
-
-      if (diff !== 0) return diff;
-      return a.title.localeCompare(b.title);
-    });
-  };
-
-  const getMessageSections = () => {
-    const trimmedField = groupField.trim();
-    const trimmedValue = groupValue.trim();
-
-    if (!groupEnabled || !trimmedField) {
-      return [{ id: "all", title: "", messages: sortedMessages, isGrouped: false }];
-    }
-
-    if (trimmedValue) {
-      const groupedMessages = [];
-      const ungroupedMessages = [];
-
-      sortedMessages.forEach((message) => {
-        if (messageMatchesGroupValue(message, trimmedField, trimmedValue)) {
-          groupedMessages.push(message);
-        } else {
-          ungroupedMessages.push(message);
-        }
-      });
-
-      return sortSections([
-        {
-          id: `match:${trimmedField}:${trimmedValue}`,
-          title: `${trimmedField} = ${trimmedValue}`,
-          messages: groupedMessages,
-          displayValue: getGroupDisplayValue(groupedMessages, groupDisplayField),
-          isGrouped: true,
-        },
-        {
-          id: `other:${trimmedField}:${trimmedValue}`,
-          title: t("messageDetails.grouping.other"),
-          messages: ungroupedMessages,
-          displayValue: getGroupDisplayValue(ungroupedMessages, groupDisplayField),
-          isGrouped: true,
-        },
-      ].filter((section) => section.messages.length > 0));
-    }
-
-    const sectionsByValue = new Map();
-    const noValueMessages = [];
-
-    sortedMessages.forEach((message) => {
-      const values = extractGroupValues(message, trimmedField);
-      if (values.length === 0) {
-        noValueMessages.push(message);
-        return;
-      }
-
-      const firstValue = values[0];
-      if (!sectionsByValue.has(firstValue)) {
-        sectionsByValue.set(firstValue, []);
-      }
-      sectionsByValue.get(firstValue).push(message);
-    });
-
-    const groupedSections = Array.from(sectionsByValue.entries()).map(
-      ([value, messages]) => ({
-        id: `value:${trimmedField}:${value}`,
-        title: `${trimmedField} = ${value}`,
-        messages,
-        displayValue: getGroupDisplayValue(messages, groupDisplayField),
-        isGrouped: true,
-      })
-    );
-
-    if (noValueMessages.length > 0) {
-      groupedSections.push({
-        id: `missing:${trimmedField}`,
-        title: t("messageDetails.grouping.noField", { field: trimmedField }),
-        messages: noValueMessages,
-        displayValue: getGroupDisplayValue(noValueMessages, groupDisplayField),
-        isGrouped: true,
-      });
-    }
-
-    return sortSections(groupedSections);
   };
 
   const toggleGroupCollapse = (groupId) => {
@@ -685,8 +436,6 @@ const MessageDetails = ({
       </div>
     );
   };
-
-  const messageSections = getMessageSections();
 
   const renderMessageRow = (message, index) => {
     const messageKey = message.messageId;
