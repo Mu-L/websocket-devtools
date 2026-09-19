@@ -274,5 +274,8 @@
   "popup.footer.github": "GitHub",
   "system.closeEvent.notice": "Nur 'Client-Schließung'-Ereignisse (mit Schließcode 1000 oder 3000-4999) rufen tatsächlich ws.close() auf und schließen die Verbindung. Alle anderen Schließereignisse (einschließlich serverseitig) sind simuliert: ws.onclose.call() wird ausgelöst, aber die zugrunde liegende Verbindung wird nicht wirklich geschlossen.",
   "simulate.animated.heartTooltip": "Wenn Ihnen das Plugin gefällt, geben Sie uns bitte eine 5-Sterne-Bewertung~",
-  "simulate.animated.githubTooltip": "Wenn Ihnen das Plugin gefällt, schauen Sie sich gerne unser Github-Repository an~"
+  "simulate.animated.githubTooltip": "Wenn Ihnen das Plugin gefällt, schauen Sie sich gerne unser Github-Repository an~",
+  "jsonViewer.tooltips.search": "Suchen (Strg/Cmd + F)",
+  "messageDetails.controls.horizontalLayout": "Zu Links-/Rechts-Layout wechseln",
+  "messageDetails.controls.verticalLayout": "Zu Oben-/Unten-Layout wechseln"
 }

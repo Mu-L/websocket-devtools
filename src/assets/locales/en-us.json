@@ -281,5 +281,8 @@
   "panel.trafficPause.description": "Message monitoring paused ({{rate}} msg/s). Click Resume to continue.",
   "panel.trafficPause.resume": "Resume",
   "panel.circuitBreaker.title": "High Traffic Detected",
-  "panel.circuitBreaker.description": "Monitoring stopped due to high traffic ({{rate}} msg/s). Click Monitor to resume."
+  "panel.circuitBreaker.description": "Monitoring stopped due to high traffic ({{rate}} msg/s). Click Monitor to resume.",
+  "jsonViewer.tooltips.search": "Search (Ctrl / Cmd + F)",
+  "messageDetails.controls.horizontalLayout": "Switch to left/right layout",
+  "messageDetails.controls.verticalLayout": "Switch to top/bottom layout"
 }

@@ -273,5 +273,8 @@
   "popup.footer.github": "GitHub",
   "system.closeEvent.notice": "「クライアントクローズ」イベント（クローズコード1000または3000-4999）のみが実際にws.close()を呼び出して接続を閉じます。その他の全てのクローズイベント（サーバーサイドを含む）はシミュレーションです：ws.onclose.call()がトリガーされますが、基本的な接続は実際には閉じられません。",
   "simulate.animated.heartTooltip": "このプラグインが気に入ったら、5つ星評価をお願いします〜",
-  "simulate.animated.githubTooltip": "このプラグインが気に入ったら、このリポジトリをチェックしてみてください〜"
+  "simulate.animated.githubTooltip": "このプラグインが気に入ったら、このリポジトリをチェックしてみてください〜",
+  "jsonViewer.tooltips.search": "検索 (Ctrl+F)",
+  "messageDetails.controls.horizontalLayout": "左右レイアウトに切り替え",
+  "messageDetails.controls.verticalLayout": "上下レイアウトに切り替え"
 }

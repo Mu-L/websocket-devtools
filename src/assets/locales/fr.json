@@ -275,5 +275,8 @@
   "popup.footer.github": "GitHub",
   "system.closeEvent.notice": "Seuls les événements de 'Fermeture Client' (avec Code de Fermeture 1000 ou 3000-4999) appelleront réellement ws.close() et fermeront la connexion. Tous les autres événements de fermeture (y compris côté serveur) sont simulés : ws.onclose.call() sera déclenché, mais la connexion sous-jacente n'est pas vraiment fermée.",
   "simulate.animated.heartTooltip": "Si vous aimez ce plugin, donnez-nous une note de 5 étoiles ~",
-  "simulate.animated.githubTooltip": "Si vous aimez ce plugin, jetez un œil à notre dépôt Github ~"
+  "simulate.animated.githubTooltip": "Si vous aimez ce plugin, jetez un œil à notre dépôt Github ~",
+  "jsonViewer.tooltips.search": "Rechercher (Ctrl+F)",
+  "messageDetails.controls.horizontalLayout": "Passer en disposition gauche/droite",
+  "messageDetails.controls.verticalLayout": "Passer en disposition haut/bas"
 }

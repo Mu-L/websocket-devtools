@@ -1131,6 +1131,18 @@
     "message": "Monitoring stopped due to high traffic ({{rate}} msg/s). Click Monitor to resume.",
     "description": "Translation for panel.circuitBreaker.description"
   },
+  "jsonViewer_tooltips_search": {
+    "message": "Search (Ctrl / Cmd + F)",
+    "description": "Translation for jsonViewer.tooltips.search"
+  },
+  "messageDetails_controls_horizontalLayout": {
+    "message": "Switch to left/right layout",
+    "description": "Translation for messageDetails.controls.horizontalLayout"
+  },
+  "messageDetails_controls_verticalLayout": {
+    "message": "Switch to top/bottom layout",
+    "description": "Translation for messageDetails.controls.verticalLayout"
+  },
   "extensionName": {
     "message": "WebSocket DevTools",
     "description": "Extension name"

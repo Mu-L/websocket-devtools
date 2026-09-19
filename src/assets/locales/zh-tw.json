@@ -272,5 +272,8 @@
   "popup.footer.github": "GitHub",
   "system.closeEvent.notice": "僅\"客戶端關閉\"事件（Close Code 為 1000 或 3000-4999）會真實呼叫 ws.close() 並斷開連線，其餘所有關閉事件（包括伺服端關閉）僅模擬關閉，雖然會觸發 ws.onclose.call() 事件，但底層連線未真正斷開。",
   "simulate.animated.heartTooltip": "如果你喜歡這個外掛，請給我們5星好評～",
-  "simulate.animated.githubTooltip": "如果你喜歡這個外掛，可以探索這個倉庫～"
+  "simulate.animated.githubTooltip": "如果你喜歡這個外掛，可以探索這個倉庫～",
+  "jsonViewer.tooltips.search": "搜尋 (Ctrl+F)",
+  "messageDetails.controls.horizontalLayout": "切換為左右佈局",
+  "messageDetails.controls.verticalLayout": "切換為上下佈局"
 }

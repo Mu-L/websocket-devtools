@@ -281,5 +281,8 @@
   "panel_trafficPause_description": "panel.trafficPause.description",
   "panel_trafficPause_resume": "panel.trafficPause.resume",
   "panel_circuitBreaker_title": "panel.circuitBreaker.title",
-  "panel_circuitBreaker_description": "panel.circuitBreaker.description"
+  "panel_circuitBreaker_description": "panel.circuitBreaker.description",
+  "jsonViewer_tooltips_search": "jsonViewer.tooltips.search",
+  "messageDetails_controls_horizontalLayout": "messageDetails.controls.horizontalLayout",
+  "messageDetails_controls_verticalLayout": "messageDetails.controls.verticalLayout"
 }

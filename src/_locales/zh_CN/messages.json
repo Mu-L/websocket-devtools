@@ -1131,6 +1131,18 @@
     "message": "由于高流量 ({{rate}} 消息/秒)，监控已停止。点击 Monitor 按钮恢复。",
     "description": "Translation for panel.circuitBreaker.description"
   },
+  "jsonViewer_tooltips_search": {
+    "message": "搜索 (Ctrl+F)",
+    "description": "Translation for jsonViewer.tooltips.search"
+  },
+  "messageDetails_controls_horizontalLayout": {
+    "message": "切换为左右布局",
+    "description": "Translation for messageDetails.controls.horizontalLayout"
+  },
+  "messageDetails_controls_verticalLayout": {
+    "message": "切换为上下布局",
+    "description": "Translation for messageDetails.controls.verticalLayout"
+  },
   "extensionName": {
     "message": "WebSocket DevTools",
     "description": "Extension name"

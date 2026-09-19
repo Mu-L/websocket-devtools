@@ -276,5 +276,8 @@
   "popup.footer.github": "GitHub",
   "system.closeEvent.notice": "'클라이언트 종료' 이벤트(종료 코드 1000 또는 3000-4999)만 실제로 ws.close()를 호출하여 연결을 종료합니다. 다른 모든 종료 이벤트(서버 측 포함)는 시뮬레이션입니다: ws.onclose.call()이 트리거되지만 기본 연결은 실제로 종료되지 않습니다.",
   "simulate.animated.heartTooltip": "이 플러그인이 마음에 드시면 5성 평점을 주세요~",
-  "simulate.animated.githubTooltip": "이 플러그인이 마음에 드시면 Github 저장소도 확인해보세요~"
+  "simulate.animated.githubTooltip": "이 플러그인이 마음에 드시면 Github 저장소도 확인해보세요~",
+  "jsonViewer.tooltips.search": "검색 (Ctrl+F)",
+  "messageDetails.controls.horizontalLayout": "좌우 레이아웃으로 전환",
+  "messageDetails.controls.verticalLayout": "상하 레이아웃으로 전환"
 }

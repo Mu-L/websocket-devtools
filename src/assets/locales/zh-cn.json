@@ -281,5 +281,8 @@
   "panel.trafficPause.description": "消息监控已暂停 ({{rate}} 消息/秒)。点击恢复继续。",
   "panel.trafficPause.resume": "恢复",
   "panel.circuitBreaker.title": "检测到高流量",
-  "panel.circuitBreaker.description": "由于高流量 ({{rate}} 消息/秒)，监控已停止。点击 Monitor 按钮恢复。"
+  "panel.circuitBreaker.description": "由于高流量 ({{rate}} 消息/秒)，监控已停止。点击 Monitor 按钮恢复。",
+  "jsonViewer.tooltips.search": "搜索 (Ctrl+F)",
+  "messageDetails.controls.horizontalLayout": "切换为左右布局",
+  "messageDetails.controls.verticalLayout": "切换为上下布局"
 }
