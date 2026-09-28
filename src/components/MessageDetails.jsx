@@ -18,7 +18,7 @@ import {
   buildMessageSections,
   createMessageGroupingCache,
 } from "../utils/messageGrouping.js";
-import CheeseIcon from "../Icons/cheese.jsx";
+import CheeseIcon from "../Icons/Cheese.jsx";
 import ProtobufIcon from "../Icons/Protobuf.jsx";
 
 // SVG icon components
